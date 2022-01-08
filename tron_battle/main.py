@@ -83,10 +83,11 @@ def _input_coordinate():
 
 
 def update_information(
-    n, p, map_
+    n, p, map_, skip_n_p=False
 ) -> Tuple[Player, List[Player], List[List[int]]]:
 
-    _ = _input_n_p()
+    if not skip_n_p:
+        _ = _input_n_p()
 
     enemies = []
     for i in range(n):
@@ -101,36 +102,15 @@ def update_information(
 
 if __name__ == "__main__ ":
     n, p = [int(i) for i in input().split()]
-    been = [[-1] * width for _ in range(height)]
-    enemies = []
-
-    # update_map()
-    for i in range(n):
-        x0, y0, x1, y1 = [int(j) for j in input().split()]
-        if p == i:
-            px = x1
-            py = y1
-        else:
-            enemies.append((x1, y1, i))
-        been[y0][x0] = p
-    # update()
+    map_ = [[-1] * width for _ in range(height)]
+    me, enemies, map_ = update_information(n=n, p=p, map_=map_, skip_n_p=True)
 
     idx = search()
     print(direction_strings[idx])
 
     print(f"{enemies=}", file=sys.stderr, flush=True)
     while True:
-        _ = input()
-        # update()
-        enemies = []
-        for i in range(n):
-            x0, y0, x1, y1 = [int(j) for j in input().split()]
-            if i == p:
-                px = x1
-                py = y1
-            else:
-                enemies.append((x1, y1, i))
-            been[y1][x1] = i
+        me, enemies, map_ = update_information(n=n, p=p, map_=map_)
 
         for ex, ey, idx in enemies:
             for dx, dy in directions:
