@@ -2,12 +2,17 @@ import sys
 import math
 from copy import deepcopy
 from collections import deque
+from dataclasses import dataclass
+from typing import Tuple, List
 
-# Auto-generated code below aims at helping you parse
-# the standard input according to the problem statement.
-# To debug: print("Debug messages...", file=sys.stderr, flush=True)
 
-# game loop
+@dataclass
+class Player:
+    y: int
+    x: int
+    idx: int
+
+
 width = 30
 height = 20
 LEFT = (-1, 0)
@@ -66,10 +71,40 @@ def search():
 #             py = y1
 #         been[y0][x0] = p
 
+
+def _input_n_p():
+    n, p = [int(i) for i in input().split()]
+    return n, p
+
+
+def _input_coordinate():
+    x0, y0, x1, y1 = [int(i) for i in input().split()]
+    return x0, y0, x1, y1
+
+
+def update_information(
+    n, p, map_
+) -> Tuple[Player, List[Player], List[List[int]]]:
+
+    _ = _input_n_p()
+
+    enemies = []
+    for i in range(n):
+        x0, y0, x1, y1 = _input_coordinate()
+        if p == i:
+            me = Player(y=y1, x=x1, idx=i)
+        else:
+            enemies.append(Player(y=y1, x=x1, idx=i))
+        map_[y1][x1] = i
+    return me, enemies, map_
+
+
 if __name__ == "__main__ ":
     n, p = [int(i) for i in input().split()]
     been = [[-1] * width for _ in range(height)]
     enemies = []
+
+    # update_map()
     for i in range(n):
         x0, y0, x1, y1 = [int(j) for j in input().split()]
         if p == i:
