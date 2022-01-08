@@ -2,7 +2,7 @@ import unittest
 import contextlib
 
 import tron_battle
-from tron_battle.main import update_information
+from tron_battle.main import update_information, bfs
 from tron_battle.main import Player
 
 i = 0
@@ -84,3 +84,46 @@ class TestUpdateInformation:
         expect = [Player(y=1, x=2, idx=1)]
         assert enemies == expect
 
+
+class TestBfs():
+    def test_run1(self):
+        map_ = [
+            [0, -1, -1, -1, 0],
+            [0, -1, 0, 0, 0],
+            [0, -1, 0, -1, 0],
+            [0, -1, -1, -1, 0],
+        ]
+
+        actual = bfs(0, 1, map_)
+        expect = 6
+        assert actual == expect
+
+        actual = bfs(0, 3, map_)
+        expect = 8
+        assert actual == expect
+
+        actual = bfs(3, 1, map_)
+        expect = 5
+        assert actual == expect
+
+    def test_run2(self):
+        map_ = [
+            [-1, 2, 2, 2, 2, 2],
+            [-1, 2, -1, -1, -1, -1],
+            [-1, 2, -1, -1, -1, -1],
+            [1, -1, -1, -1, -1, -1],
+            [1, -1, -1, -1, -1, -1],
+            [1, -1, -1, -1, -1, -1],
+        ]
+
+        actual = bfs(2, 0, map_)
+        expect = 2
+        assert actual == expect
+
+        actual = bfs(1, 3, map_)
+        expect = 6
+        assert actual == expect
+
+        actual = bfs(3, 3, map_)
+        expect = 4
+        assert actual == expect

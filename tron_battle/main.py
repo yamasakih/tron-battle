@@ -24,24 +24,8 @@ direction_strings = ["LEFT", "UP", "RIGHT", "DOWN"]
 MARGIN = 0
 
 
-def bfs(y, x):
-    inter = [[-1] * width for _ in range(height)]
-    q = deque([])
-    q.append((y, x, 0))
-    inter[y][x] = 0
-    max_ = -1
-    while q:
-        y, x, depth = q.popleft()
-        for dx, dy in directions:
-            nx = x + dx
-            ny = y + dy
-            if 0 <= nx < width and 0 <= ny < height and been[ny][nx] == -1:
-                if inter[ny][nx] != -1:
-                    continue
-                inter[ny][nx] = depth + 1
-                max_ = max(depth + 1, max_)
-                q.append((ny, nx, depth + 1))
-    return max_
+def debug(*args, end="\n"):
+    print(*args, end=end, file=sys.stderr, flush=True)
 
 
 def search():
@@ -58,18 +42,6 @@ def search():
         if best[0] < v:
             best = (v, i)
     return best[1]
-
-
-# def update():
-#     global px
-#     global py
-#     global been
-#     for i in range(n):
-#         x0, y0, x1, y1 = [int(j) for j in input().split()]
-#         if p == i:
-#             px = x1
-#             py = y1
-#         been[y0][x0] = p
 
 
 def _input_n_p():
@@ -98,6 +70,28 @@ def update_information(
             enemies.append(Player(y=y1, x=x1, idx=i))
         map_[y1][x1] = i
     return me, enemies, map_
+
+
+def bfs(y, x, map_):
+    height = len(map_)
+    width = len(map_[0])
+    D = [[-1] * width for _ in range(height)]
+    q = deque([])
+    q.append((y, x, 0))
+    D[y][x] = 0
+    max_depth = -1
+    while q:
+        y, x, depth = q.popleft()
+        for dx, dy in directions:
+            nx = x + dx
+            ny = y + dy
+            if 0 <= nx < width and 0 <= ny < height and map_[ny][nx] == -1:
+                if D[ny][nx] != -1:
+                    continue
+                D[ny][nx] = depth + 1
+                max_depth = max(depth + 1, max_depth)
+                q.append((ny, nx, depth + 1))
+    return max_depth
 
 
 if __name__ == "__main__ ":
