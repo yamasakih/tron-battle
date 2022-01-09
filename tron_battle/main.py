@@ -4,6 +4,30 @@ from copy import deepcopy
 from collections import deque
 from dataclasses import dataclass
 from typing import Tuple, List
+from enum import IntEnum, auto
+
+
+width = 30
+height = 20
+
+class Direction(IntEnum):
+    LEFT = auto()
+    UP = auto()
+    RIGHT = auto()
+    DOWN = auto()
+
+    @classmethod
+    def get_name(cls, i) -> str:
+        return ["LEFT", "UP", "RIGHT", "DONW"][i]
+
+
+directions = {
+    Direction.LEFT : (0, -1),
+    Direction.RIGHT : (0, 1),
+    Direction.UP : (-1, -0),
+    Direction.DOWN : (1, 0)
+}
+MARGIN = 0
 
 
 @dataclass
@@ -11,37 +35,6 @@ class Player:
     y: int
     x: int
     idx: int
-
-
-width = 30
-height = 20
-LEFT = (-1, 0)
-RIGHT = (1, 0)
-UP = (0, -1)
-DOWN = (0, 1)
-directions = [LEFT, UP, RIGHT, DOWN]
-direction_strings = ["LEFT", "UP", "RIGHT", "DOWN"]
-MARGIN = 0
-
-
-def debug(*args, end="\n"):
-    print(*args, end=end, file=sys.stderr, flush=True)
-
-
-def search():
-    best = (-3, -3)
-    for i, d in enumerate(directions):
-        dx, dy = d
-        nx = px + dx
-        ny = py + dy
-        if not (0 <= nx < width and 0 <= ny < height):
-            continue
-        if been[ny][nx] != -1:
-            continue
-        v = bfs(ny, nx)
-        if best[0] < v:
-            best = (v, i)
-    return best[1]
 
 
 def _input_n_p():
@@ -82,9 +75,9 @@ def bfs(y, x, map_):
     max_depth = -1
     while q:
         y, x, depth = q.popleft()
-        for dx, dy in directions:
-            nx = x + dx
+        for dy, dx in directions.values():
             ny = y + dy
+            nx = x + dx
             if 0 <= nx < width and 0 <= ny < height and map_[ny][nx] == -1:
                 if D[ny][nx] != -1:
                     continue
