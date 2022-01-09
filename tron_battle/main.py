@@ -1,31 +1,35 @@
-import sys
 import math
-from copy import deepcopy
+import sys
 from collections import deque
+from copy import deepcopy
 from dataclasses import dataclass
-from typing import Tuple, List
 from enum import IntEnum, auto
+from typing import List, Tuple, Union
 
 
-width = 30
-height = 20
+def debug(*args, end="\n"):
+    print(*args, end=end, file=sys.stderr, flush=True)
+
 
 class Direction(IntEnum):
-    LEFT = auto()
+    LEFT = 0
     UP = auto()
     RIGHT = auto()
     DOWN = auto()
 
     @classmethod
-    def get_name(cls, i) -> str:
-        return ["LEFT", "UP", "RIGHT", "DONW"][i]
+    def get_name(cls, i: Union[int, "Direction"]) -> str:
+        return ["LEFT", "UP", "RIGHT", "DOWN"][i]
 
+
+width = 30
+height = 20
 
 directions = {
-    Direction.LEFT : (0, -1),
-    Direction.RIGHT : (0, 1),
-    Direction.UP : (-1, -0),
-    Direction.DOWN : (1, 0)
+    Direction.LEFT: (0, -1),
+    Direction.RIGHT: (0, 1),
+    Direction.UP: (-1, -0),
+    Direction.DOWN: (1, 0),
 }
 MARGIN = 0
 
@@ -86,6 +90,48 @@ def bfs(y, x, map_):
                 q.append((ny, nx, depth + 1))
     return max_depth
 
+
+@dataclass
+class Brain:
+    me: Player
+    enemies: List[Player]
+    map_: List[List[int]]
+    behaivior: "BaseBehavior"
+
+    def think(self) -> str:
+        return self.behaivior.think(self.me, self.enemies, self.map_)
+
+    def update(self, me: Player, enemies: List[Player], map_: List[List[int]]) -> None:
+        self.me = me
+        self.enemies = enemies
+        self.map_ = map_
+
+
+class BaseBehavior:
+    def think(self, me: Player, enemies: List[Player], map_: List[List[int]]) -> str:
+        return "Not implemented"
+
+    def isin(self, y: int, x: int) -> bool:
+        return 0 <= y < self.height and 0 <= x < self.width
+
+
+class BfsBehavior(BaseBehavior):
+    def think(self, me: Player, enemies: List[Player], map_: List[List[int]]) -> str:
+        self.height = len(map_)
+        self.width = len(map_[0])
+        best = (None, -3)
+        for key, value in directions.items():
+            dy, dx = value
+            ny = me.y + dy
+            nx = me.x + dx
+            if not self.isin(ny, nx):
+                continue
+            if map_[ny][nx] != -1:
+                continue
+            depth = bfs(ny, nx, map_)
+            if best[1] < depth:
+                best = (key, depth)
+        return Direction.get_name(best[0])
 
 if __name__ == "__main__ ":
     n, p = [int(i) for i in input().split()]

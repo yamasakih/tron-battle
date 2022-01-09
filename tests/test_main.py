@@ -1,9 +1,8 @@
-import unittest
 import contextlib
+import unittest
 
 import tron_battle
-from tron_battle.main import update_information, bfs
-from tron_battle.main import Player
+from tron_battle.main import BfsBehavior, Player, bfs, update_information
 
 i = 0
 
@@ -85,7 +84,7 @@ class TestUpdateInformation:
         assert enemies == expect
 
 
-class TestBfs():
+class TestBfs:
     def test_run1(self):
         map_ = [
             [0, -1, -1, -1, 0],
@@ -126,4 +125,48 @@ class TestBfs():
 
         actual = bfs(3, 3, map_)
         expect = 4
+        assert actual == expect
+
+
+class TestBfsBehavior:
+    def test_run_1(self):
+        map_ = [
+            [0, -1, -1, -1, 1],
+            [0, -1, 1, 1, 1],
+            [0, -1, 1, -1, 1],
+            [0, -1, -1, -1, 1],
+        ]
+        behavior = BfsBehavior()
+
+        me = Player(y=0, x=0, idx=0)
+        enemies = [Player(y=3, x=4, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "RIGHT"
+        assert actual == expect
+
+        me = Player(y=3, x=4, idx=1)
+        enemies = [Player(y=0, x=0, idx=0)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "LEFT"
+        assert actual == expect
+
+    def test_run_2(self):
+        map_ = [
+            [0, 0, -1, -1, 1],
+            [0, -1, 1, 1, 1],
+            [0, -1, 1, -1, 1],
+            [0, -1, -1, -1, 1],
+        ]
+        behavior = BfsBehavior()
+
+        me = Player(y=0, x=1, idx=0)
+        enemies = [Player(y=3, x=4, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "DOWN"
+        assert actual == expect
+
+        me = Player(y=2, x=2, idx=1)
+        enemies = [Player(y=0, x=3, idx=0)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "RIGHT"
         assert actual == expect
