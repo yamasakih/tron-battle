@@ -101,14 +101,18 @@ class Brain:
     def think(self) -> str:
         return self.behaivior.think(self.me, self.enemies, self.map_)
 
-    def update(self, me: Player, enemies: List[Player], map_: List[List[int]]) -> None:
+    def update(
+        self, me: Player, enemies: List[Player], map_: List[List[int]]
+    ) -> None:
         self.me = me
         self.enemies = enemies
         self.map_ = map_
 
 
 class BaseBehavior:
-    def think(self, me: Player, enemies: List[Player], map_: List[List[int]]) -> str:
+    def think(
+        self, me: Player, enemies: List[Player], map_: List[List[int]]
+    ) -> str:
         return "Not implemented"
 
     def isin(self, y: int, x: int) -> bool:
@@ -116,7 +120,9 @@ class BaseBehavior:
 
 
 class BfsBehavior(BaseBehavior):
-    def think(self, me: Player, enemies: List[Player], map_: List[List[int]]) -> str:
+    def think(
+        self, me: Player, enemies: List[Player], map_: List[List[int]]
+    ) -> str:
         self.height = len(map_)
         self.width = len(map_[0])
         best = (None, -3)
@@ -133,41 +139,21 @@ class BfsBehavior(BaseBehavior):
                 best = (key, depth)
         return Direction.get_name(best[0])
 
+
 if __name__ == "__main__ ":
     n, p = [int(i) for i in input().split()]
     map_ = [[-1] * width for _ in range(height)]
     me, enemies, map_ = update_information(n=n, p=p, map_=map_, skip_n_p=True)
 
-    idx = search()
-    print(direction_strings[idx])
+    behaivior = BfsBehavior()
+    brain = Brain(me, enemies, map_, behaivior)
 
-    print(f"{enemies=}", file=sys.stderr, flush=True)
+    ans = brain.think()
+    print(ans)
+
     while True:
         me, enemies, map_ = update_information(n=n, p=p, map_=map_)
 
-        for ex, ey, idx in enemies:
-            for dx, dy in directions:
-                nx = ex + dx
-                ny = ey + dy
-                if nx < 0 or width <= nx or ny < 0 or height <= ny:
-                    continue
-                v = (1 << idx) * 10
-                print(v, file=sys.stderr, flush=True)
-                if been[ny][nx] == -1:
-                    been[ny][nx] = v
-                elif been[ny][nx] >= 10:
-                    been[ny][nx] += v
-        for b in been:
-            print(b, file=sys.stderr, flush=True)
-        idx = search()
-        for ex, ey, i in enemies:
-            for dx, dy in directions:
-                nx = ex + dx
-                ny = ey + dy
-                if nx < 0 or width <= nx or ny < 0 or height <= ny:
-                    continue
-                # v = (1 << i) * 10
-                if been[ny][nx] >= 10:
-                    been[ny][nx] = -1
-
-        print(direction_strings[idx])
+        brain.update(me, enemies, map_)
+        ans = brain.think()
+        print(ans)
