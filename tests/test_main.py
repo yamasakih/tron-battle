@@ -3,6 +3,8 @@ import unittest
 
 import tron_battle
 from tron_battle.main import (
+    BehaviorFactory,
+    BehaviorName,
     BfsBehavior,
     Player,
     bfs,
@@ -139,7 +141,7 @@ class TestBfs:
 
 
 class TestBfsBehavior:
-    def test_run_1(self):
+    def test_run1(self):
         map_ = [
             [0, -1, -1, -1, 1],
             [0, -1, 1, 1, 1],
@@ -160,7 +162,7 @@ class TestBfsBehavior:
         expect = "LEFT"
         assert actual == expect
 
-    def test_run_2(self):
+    def test_run2(self):
         map_ = [
             [0, 0, -1, -1, 1],
             [0, -1, 1, 1, 1],
@@ -181,7 +183,7 @@ class TestBfsBehavior:
         expect = "RIGHT"
         assert actual == expect
 
-    def test_run_3(self):
+    def test_run3(self):
         map_ = [
             [0, -1, -1, -1, 2],
             [0, 1, 1, 2, 2],
@@ -198,7 +200,7 @@ class TestBfsBehavior:
 
 
 class TestBfsMeAndEnemiesBehavior:
-    def test_run_1(self):
+    def test_run1(self):
         map_ = [
             [0, -1, -1, -1, 1],
             [0, -1, 1, 1, 1],
@@ -219,7 +221,7 @@ class TestBfsMeAndEnemiesBehavior:
         expect = "LEFT"
         assert actual == expect
 
-    def test_run_2(self):
+    def test_run2(self):
         map_ = [
             [0, 0, -1, -1, 1],
             [0, -1, 1, 1, 1],
@@ -240,7 +242,7 @@ class TestBfsMeAndEnemiesBehavior:
         expect = "RIGHT"
         assert actual == expect
 
-    def test_run_3(self):
+    def test_run3(self):
         map_ = [
             [0, -1, -1, -1, 2],
             [0, 1, 1, 2, 2],
@@ -253,4 +255,22 @@ class TestBfsMeAndEnemiesBehavior:
         enemies = [Player(y=0, x=0, idx=1)]
         actual = behavior.think(me, enemies, map_)
         expect = "UP"
+        assert actual == expect
+
+
+class TestBehaviorFactory:
+    def test_run1(self):
+        factory = BehaviorFactory()
+        behavior = factory.make(BehaviorName.BfsBehavior)
+
+        actual = type(behavior)
+        expect = BfsBehavior
+        assert actual == expect
+
+    def test_run2(self):
+        factory = BehaviorFactory()
+        behavior = factory.make(BehaviorName.BfsMeAndEnemiesBehavior)
+
+        actual = type(behavior)
+        expect = BfsMeAndEnemiesBehavior
         assert actual == expect

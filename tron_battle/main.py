@@ -173,13 +173,27 @@ class BfsMeAndEnemiesBehavior(BaseBehavior):
         return Direction.get_name(best[0])
 
 
+class BehaviorName(IntEnum):
+    BfsBehavior = auto()
+    BfsMeAndEnemiesBehavior = auto()
+
+
+class BehaviorFactory:
+    @classmethod
+    def make(self, name: str) -> BaseBehavior:
+        if name == BehaviorName.BfsBehavior:
+            return BfsBehavior()
+        elif name == BehaviorName.BfsMeAndEnemiesBehavior:
+            return BfsMeAndEnemiesBehavior()
+        raise ValueError(f"Invalid name {name}")
+
+
 if __name__ == "__main__ ":
     n, p = [int(i) for i in input().split()]
     map_ = [[-1] * width for _ in range(height)]
     me, enemies, map_ = update_information(n=n, p=p, map_=map_, skip_n_p=True)
 
-    # behaivior = BfsBehavior()
-    behaivior = BfsMeAndEnemiesBehavior()
+    behaivior = BehaviorFactory().make(BehaviorName.BfsBehavior)
     brain = Brain(me, enemies, map_, behaivior)
 
     ans = brain.think()
