@@ -4,7 +4,10 @@ from collections import deque
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, NewType, Any
+
+
+Map = NewType("Map", List[List[int]])
 
 
 def debug(*args, end="\n"):
@@ -53,7 +56,7 @@ def _input_coordinate():
 
 def update_information(
     n, p, map_, skip_n_p=False
-) -> Tuple[Player, List[Player], List[List[int]]]:
+) -> Tuple[Player, List[Player], Map]:
 
     if not skip_n_p:
         _ = _input_n_p()
@@ -95,24 +98,20 @@ def bfs(y, x, map_):
 class Brain:
     me: Player
     enemies: List[Player]
-    map_: List[List[int]]
+    map_: Map
     behaivior: "BaseBehavior"
 
     def think(self) -> str:
         return self.behaivior.think(self.me, self.enemies, self.map_)
 
-    def update(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> None:
+    def update(self, me: Player, enemies: List[Player], map_: Map) -> None:
         self.me = me
         self.enemies = enemies
         self.map_ = map_
 
 
 class BaseBehavior:
-    def think(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> str:
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         return "Not implemented"
 
     def isin(self, y: int, x: int) -> bool:
@@ -120,9 +119,7 @@ class BaseBehavior:
 
 
 class BfsBehavior(BaseBehavior):
-    def think(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> str:
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         self.height = len(map_)
         self.width = len(map_[0])
         best = (None, -(10 ** 10))
@@ -141,9 +138,7 @@ class BfsBehavior(BaseBehavior):
 
 
 class BfsMeAndEnemiesBehavior(BaseBehavior):
-    def think(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> str:
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         self.height = len(map_)
         self.width = len(map_[0])
 
@@ -173,6 +168,9 @@ class BfsMeAndEnemiesBehavior(BaseBehavior):
         return Direction.get_name(best[0])
 
 
+class BfsNotGoNextToEnemiesBehavior(BaseBehavior):
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
+        self.height = len(map_)
 class BehaviorName(IntEnum):
     BfsBehavior = auto()
     BfsMeAndEnemiesBehavior = auto()
