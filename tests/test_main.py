@@ -139,6 +139,25 @@ class TestBfs:
         expect = 4
         assert actual == expect
 
+    def test_run3(self):
+        map_ = [
+            [-1, -1, 10],
+            [0, 0, -1],
+            [0, 0, -1],
+        ]
+
+        actual = bfs(0, 1, map_)
+        expect = 1
+        assert actual == expect
+
+        actual = bfs(0, 1, map_, tmp_idx=10)
+        expect = 3
+        assert actual == expect
+
+        actual = bfs(0, 1, map_, tmp_idx=20)
+        expect = 1
+        assert actual == expect
+
 
 class TestBfsBehavior:
     def test_run1(self):

@@ -72,7 +72,7 @@ def update_information(
     return me, enemies, map_
 
 
-def bfs(y, x, map_):
+def bfs(y, x, map_, tmp_idx=-1):
     height = len(map_)
     width = len(map_[0])
     D = [[-1] * width for _ in range(height)]
@@ -85,7 +85,9 @@ def bfs(y, x, map_):
         for dy, dx in directions.values():
             ny = y + dy
             nx = x + dx
-            if 0 <= nx < width and 0 <= ny < height and map_[ny][nx] == -1:
+            if 0 <= nx < width and 0 <= ny < height:
+                if map_[ny][nx] not in [-1, tmp_idx]:
+                    continue
                 if D[ny][nx] != -1:
                     continue
                 D[ny][nx] = depth + 1
