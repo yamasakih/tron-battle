@@ -293,3 +293,17 @@ class TestBehaviorFactory:
         actual = type(behavior)
         expect = BfsMeAndEnemiesBehavior
         assert actual == expect
+
+
+class TestPlayer:
+    def test_run(self):
+        player = Player(y=0, x=0, idx=0)
+        actual = player.get_tmp_idx()
+        expect = 10
+        assert actual == expect
+
+        player = Player(y=0, x=0, idx=2)
+        actual = player.get_tmp_idx()
+        expect = 40
+        assert actual == expect
+

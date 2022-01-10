@@ -43,6 +43,9 @@ class Player:
     x: int
     idx: int
 
+    def get_tmp_idx(self) -> int:
+        return (1 << self.idx) * 10
+
 
 def _input_n_p():
     n, p = [int(i) for i in input().split()]
