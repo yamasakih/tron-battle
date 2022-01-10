@@ -4,7 +4,9 @@ from collections import deque
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from typing import List, Tuple, Union
+from typing import Any, List, NewType, Tuple, Union
+
+Map = NewType("Map", List[List[int]])
 
 
 def debug(*args, end="\n"):
@@ -40,6 +42,9 @@ class Player:
     x: int
     idx: int
 
+    def get_tmp_idx(self) -> int:
+        return (1 << self.idx) * 10
+
 
 def _input_n_p():
     n, p = [int(i) for i in input().split()]
@@ -53,7 +58,7 @@ def _input_coordinate():
 
 def update_information(
     n, p, map_, skip_n_p=False
-) -> Tuple[Player, List[Player], List[List[int]]]:
+) -> Tuple[Player, List[Player], Map]:
 
     if not skip_n_p:
         _ = _input_n_p()
@@ -69,7 +74,7 @@ def update_information(
     return me, enemies, map_
 
 
-def bfs(y, x, map_):
+def bfs(y, x, map_, tmp_idx=-1):
     height = len(map_)
     width = len(map_[0])
     D = [[-1] * width for _ in range(height)]
@@ -82,7 +87,9 @@ def bfs(y, x, map_):
         for dy, dx in directions.values():
             ny = y + dy
             nx = x + dx
-            if 0 <= nx < width and 0 <= ny < height and map_[ny][nx] == -1:
+            if 0 <= nx < width and 0 <= ny < height:
+                if map_[ny][nx] not in [-1, tmp_idx]:
+                    continue
                 if D[ny][nx] != -1:
                     continue
                 D[ny][nx] = depth + 1
@@ -95,24 +102,20 @@ def bfs(y, x, map_):
 class Brain:
     me: Player
     enemies: List[Player]
-    map_: List[List[int]]
+    map_: Map
     behaivior: "BaseBehavior"
 
     def think(self) -> str:
         return self.behaivior.think(self.me, self.enemies, self.map_)
 
-    def update(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> None:
+    def update(self, me: Player, enemies: List[Player], map_: Map) -> None:
         self.me = me
         self.enemies = enemies
         self.map_ = map_
 
 
 class BaseBehavior:
-    def think(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> str:
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         return "Not implemented"
 
     def isin(self, y: int, x: int) -> bool:
@@ -120,9 +123,7 @@ class BaseBehavior:
 
 
 class BfsBehavior(BaseBehavior):
-    def think(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> str:
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         self.height = len(map_)
         self.width = len(map_[0])
         best = (None, -(10 ** 10))
@@ -141,9 +142,7 @@ class BfsBehavior(BaseBehavior):
 
 
 class BfsMeAndEnemiesBehavior(BaseBehavior):
-    def think(
-        self, me: Player, enemies: List[Player], map_: List[List[int]]
-    ) -> str:
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         self.height = len(map_)
         self.width = len(map_[0])
 
@@ -173,9 +172,87 @@ class BfsMeAndEnemiesBehavior(BaseBehavior):
         return Direction.get_name(best[0])
 
 
+class BfsNotGoNextToEnemiesBehavior(BaseBehavior):
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
+        self.height = len(map_)
+        self.width = len(map_[0])
+        self.me = me
+        self.enemies = enemies
+        self.map_ = map_
+
+        self.update_next_to_enemies()
+
+        best = self.decide_where_to_go()
+
+        self.rollback_next_to_enemies()
+
+        if best[0] is not None:
+            return Direction.get_name(best[0])
+
+        # 隣に行かない制約のせいでどこにもいけない可能性があるので隣もOKで再度探索にする
+        best = self.decide_where_to_go()
+        if best[0] is not None:
+            return Direction.get_name(best[0])
+
+        # どうしようもないけど順番のおかげで勝つかもしれないのでLEFTを返しておく
+        return "LEFT"
+
+    def decide_where_to_go(self) -> Tuple[Any, int]:
+        enemy = self.enemies[0]  # TODO: 複数対応
+
+        best = (None, -(10 ** 10))
+        for key, value in directions.items():
+            dy, dx = value
+            ny = self.me.y + dy
+            nx = self.me.x + dx
+            if not self.isin(ny, nx):
+                continue
+            if self.map_[ny][nx] != -1:
+                continue
+            me_depth = bfs(ny, nx, self.map_)
+
+            self.map_[ny][nx] = self.me.get_tmp_idx()
+
+            enemy_depth = bfs(enemy.y, enemy.x, self.map_, enemy.get_tmp_idx())
+            score = me_depth - enemy_depth
+
+            if best[1] < score:
+                best = (key, score)
+
+            self.map_[ny][nx] = -1
+        return best
+
+    def update_next_to_enemies(self) -> None:
+        for enemy in self.enemies:
+            if enemy.idx < self.me.idx:
+                # プレイヤーより先に行動し近づくと危ないので隣をすべて-1ではないようにする
+                for key, value in directions.items():
+                    dy, dx = value
+                    ny = enemy.y + dy
+                    nx = enemy.x + dx
+                    if not self.isin(ny, nx):
+                        continue
+                    if self.map_[ny][nx] != -1:
+                        continue
+                    self.map_[ny][nx] = enemy.get_tmp_idx()
+
+    def rollback_next_to_enemies(self) -> None:
+        for enemy in self.enemies:
+            if enemy.idx < self.me.idx:
+                for key, value in directions.items():
+                    dy, dx = value
+                    ny = enemy.y + dy
+                    nx = enemy.x + dx
+                    if not self.isin(ny, nx):
+                        continue
+                    if self.map_[ny][nx] == enemy.get_tmp_idx():
+                        self.map_[ny][nx] = -1
+
+
 class BehaviorName(IntEnum):
     BfsBehavior = auto()
     BfsMeAndEnemiesBehavior = auto()
+    BfsNotGoNextToEnemiesBehavior = auto()
 
 
 class BehaviorFactory:
@@ -185,6 +262,8 @@ class BehaviorFactory:
             return BfsBehavior()
         elif name == BehaviorName.BfsMeAndEnemiesBehavior:
             return BfsMeAndEnemiesBehavior()
+        elif name == BehaviorName.BfsNotGoNextToEnemiesBehavior:
+            return BfsNotGoNextToEnemiesBehavior()
         raise ValueError(f"Invalid name {name}")
 
 
@@ -193,7 +272,7 @@ if __name__ == "__main__ ":
     map_ = [[-1] * width for _ in range(height)]
     me, enemies, map_ = update_information(n=n, p=p, map_=map_, skip_n_p=True)
 
-    behaivior = BehaviorFactory().make(BehaviorName.BfsBehavior)
+    behaivior = BehaviorFactory().make(BehaviorName.BfsNotGoNextToEnemiesBehavior)
     brain = Brain(me, enemies, map_, behaivior)
 
     ans = brain.think()
