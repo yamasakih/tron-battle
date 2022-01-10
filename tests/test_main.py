@@ -2,7 +2,13 @@ import contextlib
 import unittest
 
 import tron_battle
-from tron_battle.main import BfsBehavior, Player, bfs, update_information
+from tron_battle.main import (
+    BfsBehavior,
+    Player,
+    bfs,
+    update_information,
+    BfsMeAndEnemiesBehavior,
+)
 
 i = 0
 
@@ -28,7 +34,9 @@ class TestUpdateInformation:
             return 2, 1, 2, 1
 
     def test_run(self, monkeypatch):
-        monkeypatch.setattr(tron_battle.main, "_input_n_p", self.mock_input_n_p)
+        monkeypatch.setattr(
+            tron_battle.main, "_input_n_p", self.mock_input_n_p
+        )
         monkeypatch.setattr(
             tron_battle.main, "_input_coordinate", self.mock_input_coordinate
         )
@@ -56,7 +64,9 @@ class TestUpdateInformation:
         assert enemies == expect
 
     def test_run_with_skip(self, monkeypatch):
-        monkeypatch.setattr(tron_battle.main, "_input_n_p", self.mock_input_n_p)
+        monkeypatch.setattr(
+            tron_battle.main, "_input_n_p", self.mock_input_n_p
+        )
         monkeypatch.setattr(
             tron_battle.main, "_input_coordinate", self.mock_input_coordinate
         )
@@ -169,4 +179,78 @@ class TestBfsBehavior:
         enemies = [Player(y=0, x=3, idx=0)]
         actual = behavior.think(me, enemies, map_)
         expect = "RIGHT"
+        assert actual == expect
+
+    def test_run_3(self):
+        map_ = [
+            [0, -1, -1, -1, 2],
+            [0, 1, 1, 2, 2],
+            [0, 1, -1, -1, 2],
+            [2, 2, 2, -1, -1],
+        ]
+        behavior = BfsBehavior()
+
+        me = Player(y=1, x=2, idx=0)
+        enemies = [Player(y=0, x=0, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "DOWN"
+        assert actual == expect
+
+
+class TestBfsMeAndEnemiesBehavior:
+    def test_run_1(self):
+        map_ = [
+            [0, -1, -1, -1, 1],
+            [0, -1, 1, 1, 1],
+            [0, -1, 1, -1, 1],
+            [0, -1, -1, -1, 1],
+        ]
+        behavior = BfsMeAndEnemiesBehavior()
+
+        me = Player(y=0, x=0, idx=0)
+        enemies = [Player(y=3, x=4, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "RIGHT"
+        assert actual == expect
+
+        me = Player(y=3, x=4, idx=1)
+        enemies = [Player(y=0, x=0, idx=0)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "LEFT"
+        assert actual == expect
+
+    def test_run_2(self):
+        map_ = [
+            [0, 0, -1, -1, 1],
+            [0, -1, 1, 1, 1],
+            [0, -1, 1, -1, 1],
+            [0, -1, -1, -1, 1],
+        ]
+        behavior = BfsMeAndEnemiesBehavior()
+
+        me = Player(y=0, x=1, idx=0)
+        enemies = [Player(y=3, x=4, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "DOWN"
+        assert actual == expect
+
+        me = Player(y=2, x=2, idx=1)
+        enemies = [Player(y=0, x=3, idx=0)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "RIGHT"
+        assert actual == expect
+
+    def test_run_3(self):
+        map_ = [
+            [0, -1, -1, -1, 2],
+            [0, 1, 1, 2, 2],
+            [0, 1, -1, -1, 2],
+            [2, 2, 2, -1, -1],
+        ]
+        behavior = BfsMeAndEnemiesBehavior()
+
+        me = Player(y=1, x=2, idx=0)
+        enemies = [Player(y=0, x=0, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "UP"
         assert actual == expect

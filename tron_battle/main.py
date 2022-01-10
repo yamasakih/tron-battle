@@ -125,7 +125,7 @@ class BfsBehavior(BaseBehavior):
     ) -> str:
         self.height = len(map_)
         self.width = len(map_[0])
-        best = (None, -3)
+        best = (None, -(10 ** 10))
         for key, value in directions.items():
             dy, dx = value
             ny = me.y + dy
@@ -140,12 +140,46 @@ class BfsBehavior(BaseBehavior):
         return Direction.get_name(best[0])
 
 
+class BfsMeAndEnemiesBehavior(BaseBehavior):
+    def think(
+        self, me: Player, enemies: List[Player], map_: List[List[int]]
+    ) -> str:
+        self.height = len(map_)
+        self.width = len(map_[0])
+
+        enemy = enemies[0]  # TODO: 複数対応
+
+        best = (None, -(10 ** 10))
+        for key, value in directions.items():
+            dy, dx = value
+            ny = me.y + dy
+            nx = me.x + dx
+            if not self.isin(ny, nx):
+                continue
+            if map_[ny][nx] != -1:
+                continue
+            me_depth = bfs(ny, nx, map_)
+
+            map_[ny][nx] = 10
+
+            enemy_depth = bfs(enemy.y, enemy.x, map_)
+            score = me_depth - enemy_depth
+
+            if best[1] < score:
+                best = (key, score)
+
+            map_[ny][nx] = -1
+
+        return Direction.get_name(best[0])
+
+
 if __name__ == "__main__ ":
     n, p = [int(i) for i in input().split()]
     map_ = [[-1] * width for _ in range(height)]
     me, enemies, map_ = update_information(n=n, p=p, map_=map_, skip_n_p=True)
 
-    behaivior = BfsBehavior()
+    # behaivior = BfsBehavior()
+    behaivior = BfsMeAndEnemiesBehavior()
     brain = Brain(me, enemies, map_, behaivior)
 
     ans = brain.think()
