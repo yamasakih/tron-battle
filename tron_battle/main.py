@@ -9,8 +9,18 @@ from typing import Any, List, NewType, Tuple, Union
 Map = NewType("Map", List[List[int]])
 
 
-def debug(*args, end="\n"):
+def debug(*args, end="\n") -> None:
     print(*args, end=end, file=sys.stderr, flush=True)
+
+
+def debug_map(map_: Map) -> None:
+    height = len(map_)
+    width = len(map_[0])
+    for y in range(height):
+        row = []
+        for x in range(width):
+            row.append("x" if map_[y][x] == -1 else str(map_[y][x]))
+        debug("".join(row))
 
 
 class Direction(IntEnum):
@@ -57,15 +67,16 @@ def _input_coordinate():
 
 
 def update_information(
-    n, p, map_, skip_n_p=False
+    n, p, map_, first=False
 ) -> Tuple[Player, List[Player], Map]:
 
-    if not skip_n_p:
+    if not first:
         _ = _input_n_p()
 
     enemies = []
     for i in range(n):
         x0, y0, x1, y1 = _input_coordinate()
+        map_[y0][x0] = i
         if p == i:
             me = Player(y=y1, x=x1, idx=i)
         else:
@@ -270,9 +281,11 @@ class BehaviorFactory:
 if __name__ == "__main__ ":
     n, p = [int(i) for i in input().split()]
     map_ = [[-1] * width for _ in range(height)]
-    me, enemies, map_ = update_information(n=n, p=p, map_=map_, skip_n_p=True)
+    me, enemies, map_ = update_information(n=n, p=p, map_=map_, first=True)
 
-    behaivior = BehaviorFactory().make(BehaviorName.BfsNotGoNextToEnemiesBehavior)
+    behaivior = BehaviorFactory().make(
+        BehaviorName.BfsNotGoNextToEnemiesBehavior
+    )
     brain = Brain(me, enemies, map_, behaivior)
 
     ans = brain.think()
