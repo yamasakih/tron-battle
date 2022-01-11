@@ -37,7 +37,9 @@ class TestUpdateInformation:
             return 2, 1, 2, 1
 
     def test_run(self, monkeypatch):
-        monkeypatch.setattr(tron_battle.main, "_input_n_p", self.mock_input_n_p)
+        monkeypatch.setattr(
+            tron_battle.main, "_input_n_p", self.mock_input_n_p
+        )
         monkeypatch.setattr(
             tron_battle.main, "_input_coordinate", self.mock_input_coordinate
         )
@@ -64,8 +66,10 @@ class TestUpdateInformation:
         expect = [Player(y=1, x=2, idx=1)]
         assert enemies == expect
 
-    def test_run_with_skip(self, monkeypatch):
-        monkeypatch.setattr(tron_battle.main, "_input_n_p", self.mock_input_n_p)
+    def test_run_at_first(self, monkeypatch):
+        monkeypatch.setattr(
+            tron_battle.main, "_input_n_p", self.mock_input_n_p
+        )
         monkeypatch.setattr(
             tron_battle.main, "_input_coordinate", self.mock_input_coordinate
         )
@@ -76,7 +80,7 @@ class TestUpdateInformation:
         n = 2
         p = 0
         i = 0
-        me, enemies, map_ = update_information(n, p, map_, skip_n_p=True)
+        me, enemies, map_ = update_information(n, p, map_, first=True)
 
         expect = [
             [0, -1, -1, -1],
@@ -406,4 +410,74 @@ class TestBfsNotGoNextToEnemiesBehavior:
         enemies = [Player(y=0, x=0, idx=0)]
         actual = behavior.think(me, enemies, map_)
         expect = "DOWN"
+        assert actual == expect
+
+    def test_rollback_next_to_enemies(self):
+        me = Player(y=0, x=0, idx=2)
+        enemies = [Player(y=0, x=0, idx=0)]
+        behavior = BfsNotGoNextToEnemiesBehavior()
+        behavior.me = me
+        behavior.enemies = enemies
+        behavior.height = 3
+        behavior.width = 3
+
+        map_ = [
+            [10, 10, 10],
+            [10, 10, 10],
+            [10, 10, 10],
+        ]
+        behavior.map_ = map_
+        behavior.rollback_next_to_enemies()
+        actual = behavior.map_
+        expect = [
+            [10, -1, 10],
+            [-1, 10, 10],
+            [10, 10, 10],
+        ]
+        assert actual == expect
+
+        map_ = [
+            [10, 30, 10],
+            [10, 10, 10],
+            [10, 10, 10],
+        ]
+        behavior.map_ = map_
+        behavior.rollback_next_to_enemies()
+        actual = behavior.map_
+        expect = [
+            [10, 30, 10],
+            [-1, 10, 10],
+            [10, 10, 10],
+        ]
+        assert actual == expect
+
+        enemies = [Player(y=1, x=2, idx=0)]
+        behavior.enemies = enemies
+        map_ = [
+            [10, 10, 10],
+            [10, 10, 10],
+            [10, 10, 10],
+        ]
+        behavior.map_ = map_
+        behavior.rollback_next_to_enemies()
+        actual = behavior.map_
+        expect = [
+            [10, 10, -1],
+            [10, -1, 10],
+            [10, 10, -1],
+        ]
+        assert actual == expect
+
+    def test_run6(self):
+        map_ = [
+            [1, -1, -1, -1],
+            [1, -1, -1, -1],
+            [-1, 0, 0, 0],
+        ]
+        behavior = BfsNotGoNextToEnemiesBehavior()
+
+        me = Player(y=2, x=1, idx=0)
+        enemies = [Player(y=1, x=0, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "UP"
         assert actual == expect
