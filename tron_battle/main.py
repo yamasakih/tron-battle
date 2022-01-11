@@ -9,8 +9,18 @@ from typing import Any, List, NewType, Tuple, Union
 Map = NewType("Map", List[List[int]])
 
 
-def debug(*args, end="\n"):
+def debug(*args, end="\n") -> None:
     print(*args, end=end, file=sys.stderr, flush=True)
+
+
+def debug_map(map_: Map) -> None:
+    height = len(map_)
+    width = len(map_[0])
+    for y in range(height):
+        row = []
+        for x in range(width):
+            row.append("x" if map_[y][x] == -1 else str(map_[y][x]))
+        debug("".join(row))
 
 
 class Direction(IntEnum):
