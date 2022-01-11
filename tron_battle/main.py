@@ -126,6 +126,9 @@ class Brain:
 
 
 class BaseBehavior:
+    height = -1
+    width = -1
+
     def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         return "Not implemented"
 
@@ -148,8 +151,8 @@ class BfsBehavior(BaseBehavior):
                 continue
             depth = bfs(ny, nx, map_)
             if best[1] < depth:
-                best = (key, depth)
-        return Direction.get_name(best[0])
+                best = (key, depth)  # type: ignore
+        return Direction.get_name(best[0])  # type: ignore
 
 
 class BfsMeAndEnemiesBehavior(BaseBehavior):
@@ -176,11 +179,11 @@ class BfsMeAndEnemiesBehavior(BaseBehavior):
             score = me_depth - enemy_depth
 
             if best[1] < score:
-                best = (key, score)
+                best = (key, score)  # type: ignore
 
             map_[ny][nx] = -1
 
-        return Direction.get_name(best[0])
+        return Direction.get_name(best[0])  # type: ignore
 
 
 class BfsNotGoNextToEnemiesBehavior(BaseBehavior):
@@ -228,7 +231,7 @@ class BfsNotGoNextToEnemiesBehavior(BaseBehavior):
             score = me_depth - enemy_depth
 
             if best[1] < score:
-                best = (key, score)
+                best = (key, score)  # type: ignore
 
             self.map_[ny][nx] = -1
         return best
@@ -260,21 +263,72 @@ class BfsNotGoNextToEnemiesBehavior(BaseBehavior):
                         self.map_[ny][nx] = -1
 
 
+class BfsTwoStepBehavior(BaseBehavior):
+    def dist(self, y1, x1, y2, x2) -> int:
+        return abs(y1 - y2) + abs(x1 - x2)
+
+    def dfs(self, y, x, py=-1, px=-1) -> int:
+        score = bfs(y, x, self.map_)
+        if self.dist(self.me.y, self.me.x, y, x) <= 1:
+            self.map_[y][x] = self.me.get_tmp_idx()
+            for key, value in directions.items():
+                dy, dx = value
+                ny = y + dy
+                nx = x + dx
+                if not self.isin(ny, nx):
+                    continue
+                if self.map_[ny][nx] != -1:
+                    continue
+                if py == ny and px == nx:
+                    continue
+                score += self.dfs(ny, nx, y, x)
+            self.map_[y][x] = -1
+        return score
+
+    def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
+        self.height = len(map_)
+        self.width = len(map_[0])
+        self.me = me
+        self.enemies = enemies
+        self.map_ = map_
+
+        best = (None, -(10 ** 10))
+        for key, value in directions.items():
+            dy, dx = value
+            ny = me.y + dy
+            nx = me.x + dx
+            if not self.isin(ny, nx):
+                continue
+            if self.map_[ny][nx] != -1:
+                continue
+            score = self.dfs(ny, nx, self.me.y, self.me.x)
+            if best[1] < score:
+                best = (key, score)
+
+        if best[0] is not None:
+            return Direction.get_name(best[0])
+
+        return "LEFT"
+
+
 class BehaviorName(IntEnum):
     BfsBehavior = auto()
     BfsMeAndEnemiesBehavior = auto()
     BfsNotGoNextToEnemiesBehavior = auto()
+    BfsTwoStepBehavior = auto()
 
 
 class BehaviorFactory:
     @classmethod
-    def make(self, name: str) -> BaseBehavior:
+    def make(cls, name: BehaviorName) -> Any:
         if name == BehaviorName.BfsBehavior:
             return BfsBehavior()
         elif name == BehaviorName.BfsMeAndEnemiesBehavior:
             return BfsMeAndEnemiesBehavior()
         elif name == BehaviorName.BfsNotGoNextToEnemiesBehavior:
             return BfsNotGoNextToEnemiesBehavior()
+        elif name == BehaviorName.BfsTwoStepBehavior:
+            return BfsTwoStepBehavior()
         raise ValueError(f"Invalid name {name}")
 
 
@@ -283,9 +337,7 @@ if __name__ == "__main__ ":
     map_ = [[-1] * width for _ in range(height)]
     me, enemies, map_ = update_information(n=n, p=p, map_=map_, first=True)
 
-    behaivior = BehaviorFactory().make(
-        BehaviorName.BfsNotGoNextToEnemiesBehavior
-    )
+    behaivior = BehaviorFactory().make(BehaviorName.BfsTwoStepBehavior)
     brain = Brain(me, enemies, map_, behaivior)
 
     ans = brain.think()
