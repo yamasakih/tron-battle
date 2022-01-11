@@ -5,6 +5,7 @@ from tron_battle.main import (
     BfsBehavior,
     BfsMeAndEnemiesBehavior,
     BfsNotGoNextToEnemiesBehavior,
+    BfsTwoStepBehavior,
     Player,
     bfs,
     update_information,
@@ -213,6 +214,21 @@ class TestBfsBehavior:
         enemies = [Player(y=0, x=0, idx=1)]
         actual = behavior.think(me, enemies, map_)
         expect = "DOWN"
+        assert actual == expect
+
+    def test_run4(self):
+        map_ = [
+            [1, 1, -1, -1, -1, -1],
+            [1, 1, -1, -1, -1, -1],
+            [-1, -1, -1, -1, -1, -1],
+            [-1, -1, 0, 0, 0, 0],
+        ]
+        behavior = BfsBehavior()
+
+        me = Player(y=3, x=2, idx=0)
+        enemies = [Player(y=0, x=0, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "LEFT"
         assert actual == expect
 
 
@@ -477,4 +493,42 @@ class TestBfsNotGoNextToEnemiesBehavior:
         enemies = [Player(y=1, x=0, idx=1)]
         actual = behavior.think(me, enemies, map_)
         expect = "UP"
+        assert actual == expect
+
+
+class TestBfsTwoStepBehavior:
+    def test_run1(self):
+        map_ = [
+            [0, -1, -1, -1, 1],
+            [0, -1, 1, 1, 1],
+            [0, -1, 1, -1, 1],
+            [0, -1, -1, -1, 1],
+        ]
+        behavior = BfsTwoStepBehavior()
+
+        me = Player(y=0, x=0, idx=0)
+        enemies = [Player(y=3, x=4, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "RIGHT"
+        assert actual == expect
+
+        me = Player(y=3, x=4, idx=1)
+        enemies = [Player(y=0, x=0, idx=0)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "LEFT"
+        assert actual == expect
+
+    def test_run2(self):
+        map_ = [
+            [1, 1, -1, -1, -1, -1],
+            [1, 1, -1, -1, -1, -1],
+            [-1, -1, -1, -1, -1, -1],
+            [-1, -1, 0, 0, 0, 0],
+        ]
+        behavior = BfsBehavior()
+
+        me = Player(y=3, x=2, idx=0)
+        enemies = [Player(y=0, x=0, idx=1)]
+        actual = behavior.think(me, enemies, map_)
+        expect = "LEFT"
         assert actual == expect
