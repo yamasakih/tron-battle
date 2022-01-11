@@ -1,6 +1,3 @@
-import contextlib
-import unittest
-
 import tron_battle
 from tron_battle.main import (
     BehaviorFactory,

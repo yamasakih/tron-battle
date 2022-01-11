@@ -126,6 +126,9 @@ class Brain:
 
 
 class BaseBehavior:
+    height = -1
+    width = -1
+
     def think(self, me: Player, enemies: List[Player], map_: Map) -> str:
         return "Not implemented"
 
@@ -148,8 +151,8 @@ class BfsBehavior(BaseBehavior):
                 continue
             depth = bfs(ny, nx, map_)
             if best[1] < depth:
-                best = (key, depth)
-        return Direction.get_name(best[0])
+                best = (key, depth)  # type: ignore
+        return Direction.get_name(best[0])  # type: ignore
 
 
 class BfsMeAndEnemiesBehavior(BaseBehavior):
@@ -176,11 +179,11 @@ class BfsMeAndEnemiesBehavior(BaseBehavior):
             score = me_depth - enemy_depth
 
             if best[1] < score:
-                best = (key, score)
+                best = (key, score)  # type: ignore
 
             map_[ny][nx] = -1
 
-        return Direction.get_name(best[0])
+        return Direction.get_name(best[0])  # type: ignore
 
 
 class BfsNotGoNextToEnemiesBehavior(BaseBehavior):
@@ -227,8 +230,11 @@ class BfsNotGoNextToEnemiesBehavior(BaseBehavior):
             enemy_depth = bfs(enemy.y, enemy.x, self.map_, enemy.get_tmp_idx())
             score = me_depth - enemy_depth
 
+            if me_depth > enemy_depth:
+                score += 10000
+
             if best[1] < score:
-                best = (key, score)
+                best = (key, score)  # type: ignore
 
             self.map_[ny][nx] = -1
         return best
@@ -268,7 +274,7 @@ class BehaviorName(IntEnum):
 
 class BehaviorFactory:
     @classmethod
-    def make(self, name: str) -> BaseBehavior:
+    def make(self, name: BehaviorName) -> BaseBehavior:
         if name == BehaviorName.BfsBehavior:
             return BfsBehavior()
         elif name == BehaviorName.BfsMeAndEnemiesBehavior:
