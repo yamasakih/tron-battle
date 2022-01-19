@@ -1,5 +1,7 @@
+from copy import deepcopy
 import tron_battle
 from tron_battle.main import (
+    _reset_map,
     BehaviorFactory,
     BehaviorName,
     BfsBehavior,
@@ -531,4 +533,41 @@ class TestBfsTwoStepBehavior:
         enemies = [Player(y=0, x=0, idx=1)]
         actual = behavior.think(me, enemies, map_)
         expect = "LEFT"
+        assert actual == expect
+
+
+class TestBfsTwoStepBehavior:
+    def test_run1(self):
+        map_ = [
+            [0, -1, -1, -1, 1],
+            [0, -1, 1, 1, 1],
+            [0, 2, 1, -1, 1],
+            [0, 2, 2, 2, 1],
+        ]
+
+        actual = _reset_map(deepcopy(map_), 0)
+        expect = [
+            [-1, -1, -1, -1, 1],
+            [-1, -1, 1, 1, 1],
+            [-1, 2, 1, -1, 1],
+            [-1, 2, 2, 2, 1],
+        ]
+        assert actual == expect
+
+        actual = _reset_map(deepcopy(map_), 1)
+        expect = [
+            [0, -1, -1, -1, -1],
+            [0, -1, -1, -1, -1],
+            [0, 2, -1, -1, -1],
+            [0, 2, 2, 2, -1],
+        ]
+        assert actual == expect
+
+        actual = _reset_map(deepcopy(map_), 2)
+        expect = [
+            [0, -1, -1, -1, 1],
+            [0, -1, 1, 1, 1],
+            [0, -1, 1, -1, 1],
+            [0, -1, -1, -1, 1],
+        ]
         assert actual == expect

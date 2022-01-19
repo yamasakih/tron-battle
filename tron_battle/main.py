@@ -44,6 +44,7 @@ directions = {
     Direction.DOWN: (1, 0),
 }
 MARGIN = 0
+dropped_players = set([])
 
 
 @dataclass
@@ -66,6 +67,16 @@ def _input_coordinate():
     return x0, y0, x1, y1
 
 
+def _reset_map(map_: Map, idx: int) -> Map:
+    height = len(map_)
+    width = len(map_[0])
+    for y in range(height):
+        for x in range(width):
+            if map_[y][x] == idx:
+                map_[y][x] = -1
+    return map_
+
+
 def update_information(
     n, p, map_, first=False
 ) -> Tuple[Player, List[Player], Map]:
@@ -76,6 +87,10 @@ def update_information(
     enemies = []
     for i in range(n):
         x0, y0, x1, y1 = _input_coordinate()
+        if y1 == -1 and i not in dropped_players:
+            map_ = _reset_map(map_, i)
+            dropped_players.add(i)
+            continue
         map_[y0][x0] = i
         if p == i:
             me = Player(y=y1, x=x1, idx=i)
